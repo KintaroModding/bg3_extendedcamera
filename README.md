@@ -1,6 +1,6 @@
 # Extended Camera
 
-Lets the camera zoom out further than the game allows, when exploring and in combat.
+Lets the camera zoom out further and move further from your character than the game allows.
 
 A mod for Baldur's Gate 3 (Patch 8), made with game version 4.1.1.7398727. It needs
 [Norbyte's Script Extender](https://github.com/Norbyte/bg3se) and the

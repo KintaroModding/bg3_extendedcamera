@@ -2,7 +2,7 @@
   "$schema": "https://openmods.nexus/openmods.schema.json",
   "openmods": 1,
   "name": "Extended Camera",
-  "summary": "Lets the camera zoom out further than the game allows, when exploring and in combat.",
+  "summary": "Lets the camera zoom out further and move further from your character than the game allows.",
   "games": ["baldurs-gate-3"],
   "tags": ["camera", "quality-of-life"],
   "cover": "docs/cover.jpg",

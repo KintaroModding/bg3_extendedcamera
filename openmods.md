@@ -1,6 +1,6 @@
 # Extended Camera
 
-Lets the camera zoom out further than the game allows, when exploring and in combat.
+Lets the camera zoom out further and move further from your character than the game allows.
 
 ## What it does
 
