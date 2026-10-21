@@ -1,6 +1,7 @@
 -- Sets the camera's limits. The game keeps them in four camera definitions of the same layout, which the Script
 -- Extender exposes as Ext.Utils.GetGlobalSwitches().CameraSwitches. DefaultDistanceMax is the zoom-out limit with
--- mouse and keyboard; MaxDistFromChar is how far the camera can move away from the character. Native Camera Tweaks
+-- mouse and keyboard; MaxDistFromChar is how far the camera can move away from the character, and from SlowDownDist
+-- on the camera slows down (the game: 50 and 45, game test). Native Camera Tweaks
 -- (ersh1) changes the same values in memory; its offsets put the exploration camera first and the combat camera
 -- second.
 --
@@ -12,13 +13,20 @@ local ClientLog = Ext.Require("Client/ClientLog.lua")
 
 local Camera = {}
 
+-- The camera slows down this far before its move limit, as in the game (MaxDistFromChar 50, SlowDownDist 45).
+Camera.SlowDownGap = 5
+
 -- The values that the mod sets: the entry in CameraSwitches (1 exploration, 2 combat), the field, the setting that
--- gives the value, and a name for the log.
+-- gives the value, an optional Offset added to the setting, and a name for the log.
 Camera.Targets = {
     { Index = 1, Field = "DefaultDistanceMax", Setting = "exploration_max_distance", Name = "exploration zoom" },
     { Index = 2, Field = "DefaultDistanceMax", Setting = "combat_max_distance", Name = "combat zoom" },
     { Index = 1, Field = "MaxDistFromChar", Setting = "move_max_distance", Name = "exploration move range" },
     { Index = 2, Field = "MaxDistFromChar", Setting = "move_max_distance", Name = "combat move range" },
+    { Index = 1, Field = "SlowDownDist", Setting = "move_max_distance", Offset = -Camera.SlowDownGap,
+        Name = "exploration slow-down" },
+    { Index = 2, Field = "SlowDownDist", Setting = "move_max_distance", Offset = -Camera.SlowDownGap,
+        Name = "combat slow-down" },
 }
 
 -- The range of each MCM slider. A value outside it (for example from an edited profile file) is clamped.
@@ -85,12 +93,12 @@ local function Definition(target)
     return definition
 end
 
---- Returns the value that the settings ask for: a whole number in the slider range. MCM saves values between the
---- steps while the player drags a slider.
+--- Returns the value that the settings ask for: a whole number in the slider range, plus the target's Offset. MCM
+--- saves values between the steps while the player drags a slider.
 function Camera.Wanted(target)
     local range = Camera.Ranges[target.Setting]
     local value = math.floor(Settings.Get(target.Setting) + 0.5)
-    return math.max(range.Min, math.min(range.Max, value))
+    return math.max(range.Min, math.min(range.Max, value)) + (target.Offset or 0)
 end
 
 --- Returns every camera definition with its limits, for the log:

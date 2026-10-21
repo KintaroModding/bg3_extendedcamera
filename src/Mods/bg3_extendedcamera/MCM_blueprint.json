@@ -47,7 +47,7 @@
                 "Min": 10,
                 "Max": 200
               },
-              "Description": "How far the camera can move away from your character when you pan it with the keys, the mouse or the screen edge. A change applies at once."
+              "Description": "How far the camera can move away from your character when you pan it with the keys, the mouse or the screen edge. The game's own limit is 50. The camera slows down shortly before the limit, as in the game. A change applies at once."
             }
           ]
         }

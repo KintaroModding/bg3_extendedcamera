@@ -31,14 +31,18 @@ Test("the session load logs the game's values and sets the MCM values", function
     AssertEq(switches[2].DefaultDistanceMax, 30, "combat zoom")
     AssertEq(switches[1].MaxDistFromChar, 80, "exploration move range")
     AssertEq(switches[2].MaxDistFromChar, 80, "combat move range")
+    AssertEq(switches[1].SlowDownDist, 80 - Camera.SlowDownGap, "exploration slow-down")
+    AssertEq(switches[2].SlowDownDist, 80 - Camera.SlowDownGap, "combat slow-down")
     AssertEq(switches[3].DefaultDistanceMax, 12, "entry 3 unchanged")
-    AssertEq(switches[3].MaxDistFromChar, 30, "entry 3 move range unchanged")
+    AssertEq(switches[3].MaxDistFromChar, 50, "entry 3 move range unchanged")
+    AssertEq(switches[3].SlowDownDist, 45, "entry 3 slow-down unchanged")
     AssertEq(switches[4].DefaultDistanceMax, 12, "entry 4 unchanged")
     local log = ClientLog()
-    AssertTrue(string.find(log, "Camera switches: [1] max 12, min 3.5, tactical 10-50, move 30, slow down 5; [2] max 15,",
+    AssertTrue(string.find(log, "Camera switches: [1] max 12, min 3.5, tactical 10-50, move 50, slow down 45; [2] max 15,",
         1, true), "switches line")
     AssertTrue(string.find(log, "Session loaded: exploration zoom 12 -> 25, combat zoom 15 -> 30, "
-        .. "exploration move range 30 -> 80, combat move range 30 -> 80.", 1, true), "apply line")
+        .. "exploration move range 50 -> 80, combat move range 50 -> 80, exploration slow-down 45 -> 75, "
+        .. "combat slow-down 45 -> 75.", 1, true), "apply line")
 end)
 
 Test("a saved setting applies at once", function()
@@ -50,6 +54,7 @@ Test("a saved setting applies at once", function()
     Harness.FireMCMSettingSaved("move_max_distance", 120)
     AssertEq(switches[1].MaxDistFromChar, 120, "exploration move range")
     AssertEq(switches[2].MaxDistFromChar, 120, "combat move range")
+    AssertEq(switches[2].SlowDownDist, 115, "combat slow-down")
     Harness.FireMCMSettingSaved("exploration_max_distance", 25)
 end)
 
@@ -62,6 +67,7 @@ Test("slider values between the steps are rounded and clamped to the slider rang
     AssertEq(switches[1].DefaultDistanceMax, Camera.Ranges.exploration_max_distance.Min, "clamped to the minimum")
     Harness.FireMCMSettingSaved("move_max_distance", 999)
     AssertEq(switches[1].MaxDistFromChar, Camera.Ranges.move_max_distance.Max, "move range clamped")
+    AssertEq(switches[1].SlowDownDist, Camera.Ranges.move_max_distance.Max - Camera.SlowDownGap, "slow-down clamped")
     Harness.FireMCMSettingSaved("exploration_max_distance", 25)
     Harness.FireMCMSettingSaved("move_max_distance", 80)
 end)

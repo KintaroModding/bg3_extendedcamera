@@ -5,7 +5,7 @@ Lets the camera zoom out further than the game allows, when exploring and in com
 ## What it does
 
 - The camera zooms out further: up to 20 instead of 12 when you explore, and up to 20 instead of 15 in combat.
-- The camera can move further away from your character when you pan it.
+- The camera can move further away from your character when you pan it: up to 60 instead of 50.
 - Sliders in the Mod Configuration Menu set the zoom limits (10 to 40) and the move range (10 to 200). A change
   applies at once, without a reload.
 - The tactical view (the overhead camera) and the controller camera keep the game's own limits.
@@ -33,8 +33,8 @@ and delete the `.pak`. Saves made with the mod can then show a warning about a m
 - Open the Mod Configuration Menu (main menu, Esc menu, or the Insert key) and select **Extended Camera**.
 - **Max zoom-out when exploring** (default 20; the game uses 12): how far the camera can zoom out outside combat.
 - **Max zoom-out in combat** (default 20; the game uses 15): the same during combat.
-- **Camera move range** (default 60): how far the camera can move away from your character when you pan it with the
-  keys, the mouse or the screen edge.
+- **Camera move range** (default 60; the game uses 50): how far the camera can move away from your character when you
+  pan it with the keys, the mouse or the screen edge. The camera slows down shortly before the limit, as in the game.
 - Zoom and pan as usual. A changed value applies at once. Set a slider to the game's value to get the normal camera
   back.
 - The Mod Configuration Menu stores the settings in its profile, not in the savegame.

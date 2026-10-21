@@ -13,7 +13,8 @@ does, how to install it and its compatibility are in [openmods.md](openmods.md),
 The game keeps its camera limits in four camera definitions, which the Script Extender exposes as
 `Ext.Utils.GetGlobalSwitches().CameraSwitches` (type `CameraGlobalSwitches`). `DefaultDistanceMax` is the zoom-out
 limit with mouse and keyboard; `MaxDistFromChar` is how far the camera can move away from the character (Native Camera
-Tweaks calls it `maxCamDistanceFromRoot`). [Native Camera Tweaks](https://github.com/ersh1/BG3_NativeCameraTweaks) writes the
+Tweaks calls it `maxCamDistanceFromRoot`), and from `SlowDownDist` on the camera slows down. The game uses 50 and 45 in
+all four entries (game test); the mod keeps that gap of 5 (`Camera.SlowDownGap`). [Native Camera Tweaks](https://github.com/ersh1/BG3_NativeCameraTweaks) writes the
 same values in memory; its offsets (exploration `0x79C`, combat `0x930`, one more at `0xC58`, all `0x194` apart, the
 size of `CameraGlobalSwitches`) put the exploration camera at index 1 and the combat camera at index 2, and its
 comments give the game's limits: 12 when exploring, 15 in combat.

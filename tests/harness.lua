@@ -880,16 +880,15 @@ Ext.Mod = {
 local CAMERA_FIELDS = { "DefaultDistanceMax", "DefaultDistanceMin", "TacticalDistanceMin", "TacticalDistanceMax",
     "MaxDistFromChar", "SlowDownDist" }
 
---- Returns four camera definitions as Ext.Utils.GetGlobalSwitches().CameraSwitches gives them. The zoom values of
---- entries 1 and 2 are the game's exploration and combat limits (game test); MaxDistFromChar, SlowDownDist and
---- entries 3 and 4 are placeholders. Reading or writing a field that the mock does not know is an error, so a typo in
---- a field name fails the test.
+--- Returns four camera definitions as Ext.Utils.GetGlobalSwitches().CameraSwitches gives them, with the game's values
+--- (game tests 2026-10-21; the zoom values of entries 3 and 4 are placeholders). Reading or writing a field that the
+--- mock does not know is an error, so a typo in a field name fails the test.
 function Harness.NewCameraSwitches()
     local vanilla = { { 12, 3.5 }, { 15, 4 }, { 12, 3.5 }, { 12, 3.5 } }
     local list = {}
     for index, values in ipairs(vanilla) do
         local fields = { DefaultDistanceMax = values[1], DefaultDistanceMin = values[2], TacticalDistanceMin = 10,
-            TacticalDistanceMax = 50, MaxDistFromChar = 30, SlowDownDist = 5 }
+            TacticalDistanceMax = 50, MaxDistFromChar = 50, SlowDownDist = 45 }
         local function Check(key)
             if fields[key] == nil then
                 error("CameraGlobalSwitches has no field '" .. tostring(key) .. "' (mock knows: "
