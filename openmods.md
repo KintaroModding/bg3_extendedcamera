@@ -10,6 +10,10 @@ Lets the camera zoom out further than the game allows, when exploring and in com
 - The tactical view (the overhead camera) and the controller camera keep the game's own limits.
 - A small Lua script for the Script Extender: no DLL, no changed game files, and nothing in your savegame.
 
+## Screenshots
+
+![Extended Camera cover](docs/cover.jpg)
+
 ## How to install
 
 1. Install [Norbyte's Script Extender](https://github.com/Norbyte/bg3se). It updates itself.
@@ -42,7 +46,6 @@ and delete the `.pak`. Saves made with the mod can then show a warning about a m
 ## Known issues
 
 - With a far camera, the view can go above the ceiling indoors.
-- Multiplayer is not tested yet.
 
 ## How to build
 
