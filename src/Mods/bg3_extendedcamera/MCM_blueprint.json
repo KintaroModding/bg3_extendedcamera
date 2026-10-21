@@ -33,6 +33,23 @@
               "Description": "How far the camera can zoom out during combat. The game's own limit is 15. The tactical view (overhead camera) keeps its own limit. A change applies at once."
             }
           ]
+        },
+        {
+          "SectionId": "movement",
+          "SectionName": "Camera movement",
+          "Settings": [
+            {
+              "Id": "move_max_distance",
+              "Name": "Camera move range",
+              "Type": "slider_int",
+              "Default": 60,
+              "Options": {
+                "Min": 10,
+                "Max": 200
+              },
+              "Description": "How far the camera can move away from your character when you pan it with the keys, the mouse or the screen edge. A change applies at once."
+            }
+          ]
         }
       ]
     }

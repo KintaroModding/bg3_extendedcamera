@@ -5,8 +5,9 @@ Lets the camera zoom out further than the game allows, when exploring and in com
 ## What it does
 
 - The camera zooms out further: up to 20 instead of 12 when you explore, and up to 20 instead of 15 in combat.
-- Two sliders in the Mod Configuration Menu set both limits, from 10 to 40. A change applies at once, without a
-  reload.
+- The camera can move further away from your character when you pan it.
+- Sliders in the Mod Configuration Menu set the zoom limits (10 to 40) and the move range (10 to 200). A change
+  applies at once, without a reload.
 - The tactical view (the overhead camera) and the controller camera keep the game's own limits.
 - A small Lua script for the Script Extender: no DLL, no changed game files, and nothing in your savegame.
 
@@ -32,16 +33,18 @@ and delete the `.pak`. Saves made with the mod can then show a warning about a m
 - Open the Mod Configuration Menu (main menu, Esc menu, or the Insert key) and select **Extended Camera**.
 - **Max zoom-out when exploring** (default 20; the game uses 12): how far the camera can zoom out outside combat.
 - **Max zoom-out in combat** (default 20; the game uses 15): the same during combat.
-- Zoom out with the mouse wheel as usual. A changed value applies at once. Set a slider to the game's value to get the
-  normal camera back.
+- **Camera move range** (default 60): how far the camera can move away from your character when you pan it with the
+  keys, the mouse or the screen edge.
+- Zoom and pan as usual. A changed value applies at once. Set a slider to the game's value to get the normal camera
+  back.
 - The Mod Configuration Menu stores the settings in its profile, not in the savegame.
 
 ## Compatibility
 
 - Game version: Patch 8
 - The mod stores nothing in your savegame: you can add or remove it at any time.
-- Other mods that change the camera's zoom limit, for example Native Camera Tweaks with its zoom override, conflict
-  with this one. Use only one of them for the zoom limit.
+- Other mods that change the camera's zoom limit or move range, for example Native Camera Tweaks with its zoom
+  override, conflict with this one. Use only one of them for these limits.
 
 ## Known issues
 

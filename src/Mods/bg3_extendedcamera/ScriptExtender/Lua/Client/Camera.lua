@@ -1,7 +1,8 @@
--- Sets the camera's zoom-out limit. The game keeps its camera limits in four camera definitions of the same layout,
--- which the Script Extender exposes as Ext.Utils.GetGlobalSwitches().CameraSwitches. DefaultDistanceMax is the
--- zoom-out limit with mouse and keyboard. Native Camera Tweaks (ersh1) changes the same values in memory; its offsets
--- put the exploration camera first and the combat camera second.
+-- Sets the camera's limits. The game keeps them in four camera definitions of the same layout, which the Script
+-- Extender exposes as Ext.Utils.GetGlobalSwitches().CameraSwitches. DefaultDistanceMax is the zoom-out limit with
+-- mouse and keyboard; MaxDistFromChar is how far the camera can move away from the character. Native Camera Tweaks
+-- (ersh1) changes the same values in memory; its offsets put the exploration camera first and the combat camera
+-- second.
 --
 -- The values belong to the game process, not to the Lua state: they stay when a save loads. So the mod always sets
 -- the values from the settings, and never changes them relative to what it finds.
@@ -11,26 +12,34 @@ local ClientLog = Ext.Require("Client/ClientLog.lua")
 
 local Camera = {}
 
--- The camera definitions that the mod changes: Index in CameraSwitches, a name for the log, the setting, and the
--- game's own limit (for the texts only).
-Camera.Modes = {
-    { Index = 1, Name = "exploration", Setting = "exploration_max_distance", Vanilla = 12 },
-    { Index = 2, Name = "combat", Setting = "combat_max_distance", Vanilla = 15 },
+-- The values that the mod sets: the entry in CameraSwitches (1 exploration, 2 combat), the field, the setting that
+-- gives the value, and a name for the log.
+Camera.Targets = {
+    { Index = 1, Field = "DefaultDistanceMax", Setting = "exploration_max_distance", Name = "exploration zoom" },
+    { Index = 2, Field = "DefaultDistanceMax", Setting = "combat_max_distance", Name = "combat zoom" },
+    { Index = 1, Field = "MaxDistFromChar", Setting = "move_max_distance", Name = "exploration move range" },
+    { Index = 2, Field = "MaxDistFromChar", Setting = "move_max_distance", Name = "combat move range" },
 }
 
--- The range of the MCM sliders. A value outside it (for example from an edited profile file) is clamped.
-Camera.MinDistance = 10
-Camera.MaxDistance = 40
+-- The range of each MCM slider. A value outside it (for example from an edited profile file) is clamped.
+Camera.Ranges = {
+    exploration_max_distance = { Min = 10, Max = 40 },
+    combat_max_distance = { Min = 10, Max = 40 },
+    move_max_distance = { Min = 10, Max = 200 },
+}
 
 -- How often the check runs that brings back the values when the game or a setting changed them, in milliseconds.
 Camera.CheckIntervalMs = 2000
 
--- [mode name] = the value this Lua state set last.
+-- [target name] = the value this Lua state set last.
 local applied = {}
--- [mode name] = true after the log told once that the game reset this value.
+-- [target name] = true after the log told once that the game reset this value.
 local resetLogged = {}
 local failed = false
 local lastCheck = nil
+-- The log tells once per Lua state the values of the camera entities, and once that the camera reached its limit.
+local entitiesLogged = false
+local leashLogged = false
 
 local function Format(value)
     if type(value) ~= "number" then
@@ -63,29 +72,29 @@ local function CameraSwitches()
     return switches
 end
 
---- Returns the camera definition of a mode, or nil and an error text.
-local function Definition(mode)
+--- Returns the camera definition of a target, or nil and an error text.
+local function Definition(target)
     local switches, err = CameraSwitches()
     if switches == nil then
         return nil, err
     end
-    local ok, definition = pcall(function() return switches[mode.Index] end)
+    local ok, definition = pcall(function() return switches[target.Index] end)
     if not ok or definition == nil then
-        return nil, "CameraSwitches has no entry " .. mode.Index .. " (" .. mode.Name .. ")"
+        return nil, "CameraSwitches has no entry " .. target.Index .. " (" .. target.Name .. ")"
     end
     return definition
 end
 
---- Returns the limit that the settings ask for: a whole number in the slider range. MCM saves values between the
+--- Returns the value that the settings ask for: a whole number in the slider range. MCM saves values between the
 --- steps while the player drags a slider.
-function Camera.Wanted(mode)
-    local value = Settings.Get(mode.Setting)
-    value = math.floor(value + 0.5)
-    return math.max(Camera.MinDistance, math.min(Camera.MaxDistance, value))
+function Camera.Wanted(target)
+    local range = Camera.Ranges[target.Setting]
+    local value = math.floor(Settings.Get(target.Setting) + 0.5)
+    return math.max(range.Min, math.min(range.Max, value))
 end
 
---- Returns every camera definition with its zoom limits, for the log:
---- "[1] max 12, min 3.5, tactical 10-50; [2] ...".
+--- Returns every camera definition with its limits, for the log:
+--- "[1] max 12, min 3.5, tactical 10-50, move 30, slow down 5; [2] ...".
 function Camera.Describe()
     local switches, err = CameraSwitches()
     if switches == nil then
@@ -95,9 +104,10 @@ function Camera.Describe()
     for index = 1, 4 do
         local ok, text = pcall(function()
             local definition = switches[index]
-            return string.format("[%d] max %s, min %s, tactical %s-%s", index, Format(definition.DefaultDistanceMax),
-                Format(definition.DefaultDistanceMin), Format(definition.TacticalDistanceMin),
-                Format(definition.TacticalDistanceMax))
+            return string.format("[%d] max %s, min %s, tactical %s-%s, move %s, slow down %s", index,
+                Format(definition.DefaultDistanceMax), Format(definition.DefaultDistanceMin),
+                Format(definition.TacticalDistanceMin), Format(definition.TacticalDistanceMax),
+                Format(definition.MaxDistFromChar), Format(definition.SlowDownDist))
         end)
         if ok then
             parts[#parts + 1] = text
@@ -106,64 +116,103 @@ function Camera.Describe()
     return table.concat(parts, "; ")
 end
 
---- Sets the zoom limit of every mode from the settings. The log line names the reason and each change.
---- Returns true when all values are set.
+--- Returns the game camera entities (component GameCameraBehavior) and whether one of them is at its move limit:
+--- "MovementDistanceMax 30, AtLeashLimit false; ...", or "none".
+function Camera.DescribeEntities()
+    local ok, text, atLimit = pcall(function()
+        local parts = {}
+        local limit = false
+        for _, entity in ipairs(Ext.Entity.GetAllEntitiesWithComponent("GameCameraBehavior") or {}) do
+            local behavior = entity.GameCameraBehavior
+            parts[#parts + 1] = string.format("MovementDistanceMax %s, AtLeashLimit %s",
+                Format(behavior.MovementDistanceMax), tostring(behavior.AtLeashLimit))
+            limit = limit or behavior.AtLeashLimit == true
+        end
+        return #parts > 0 and table.concat(parts, "; ") or "none", limit
+    end)
+    if not ok then
+        return "not available: " .. tostring(text), false
+    end
+    return text, atLimit
+end
+
+--- Writes the camera entities to the log once they exist, and once when the camera reached its move limit.
+local function WatchEntities()
+    if entitiesLogged and leashLogged then
+        return
+    end
+    local text, atLimit = Camera.DescribeEntities()
+    if text == "none" then
+        return
+    end
+    if not entitiesLogged then
+        entitiesLogged = true
+        ClientLog.Add("Camera entities: " .. text .. ".")
+    end
+    if atLimit and not leashLogged then
+        leashLogged = true
+        ClientLog.Add("The camera reached its move limit: " .. text .. ". Camera switches: " .. Camera.Describe() .. ".")
+    end
+end
+
+--- Sets every target from the settings. The log line names the reason and each change. Returns true when all values
+--- are set.
 function Camera.Apply(reason)
     if failed then
         return false
     end
     local changes = {}
-    for _, mode in ipairs(Camera.Modes) do
-        local definition, err = Definition(mode)
+    for _, target in ipairs(Camera.Targets) do
+        local definition, err = Definition(target)
         if definition == nil then
             Fail(err)
             return false
         end
-        local wanted = Camera.Wanted(mode)
+        local wanted = Camera.Wanted(target)
         local ok, old = pcall(function()
-            local before = definition.DefaultDistanceMax
-            definition.DefaultDistanceMax = wanted
+            local before = definition[target.Field]
+            definition[target.Field] = wanted
             return before
         end)
         if not ok then
-            Fail("could not set the " .. mode.Name .. " limit: " .. tostring(old))
+            Fail("could not set the " .. target.Name .. ": " .. tostring(old))
             return false
         end
-        local now = definition.DefaultDistanceMax
+        local now = definition[target.Field]
         if math.abs(now - wanted) > 0.01 then
-            Fail("the game did not keep the " .. mode.Name .. " limit: set " .. Format(wanted) .. ", read "
-                .. Format(now))
+            Fail("the game did not keep the " .. target.Name .. ": set " .. Format(wanted) .. ", read " .. Format(now))
             return false
         end
-        applied[mode.Name] = wanted
-        changes[#changes + 1] = mode.Name .. " " .. Format(old) .. " -> " .. Format(wanted)
+        applied[target.Name] = wanted
+        changes[#changes + 1] = target.Name .. " " .. Format(old) .. " -> " .. Format(wanted)
     end
-    ClientLog.Add(reason .. ": zoom-out limit " .. table.concat(changes, ", ") .. ".")
+    ClientLog.Add(reason .. ": " .. table.concat(changes, ", ") .. ".")
     return true
 end
 
---- Sets the limits again when they differ from what the mode needs: after a setting changed, or when the game wrote
---- its own value. The log tells once per mode that the game reset a value.
+--- Sets the values again when they differ from what the settings ask for: after a setting changed, or when the game
+--- wrote its own value. The log tells once per target that the game reset a value.
 function Camera.Check()
     if failed then
         return
     end
-    for _, mode in ipairs(Camera.Modes) do
-        local definition, err = Definition(mode)
+    WatchEntities()
+    for _, target in ipairs(Camera.Targets) do
+        local definition, err = Definition(target)
         if definition == nil then
             Fail(err)
             return
         end
-        local current = definition.DefaultDistanceMax
-        local wanted = Camera.Wanted(mode)
-        if applied[mode.Name] ~= wanted then
-            Camera.Apply(applied[mode.Name] == nil and "Start" or "Setting changed")
+        local current = definition[target.Field]
+        local wanted = Camera.Wanted(target)
+        if applied[target.Name] ~= wanted then
+            Camera.Apply(applied[target.Name] == nil and "Start" or "Setting changed")
             return
         end
         if math.abs(current - wanted) > 0.01 then
-            if not resetLogged[mode.Name] then
-                resetLogged[mode.Name] = true
-                ClientLog.Add("The game set the " .. mode.Name .. " limit to " .. Format(current) .. "; it is set again.")
+            if not resetLogged[target.Name] then
+                resetLogged[target.Name] = true
+                ClientLog.Add("The game set the " .. target.Name .. " to " .. Format(current) .. "; it is set again.")
             end
             Camera.Apply("Game reset")
             return

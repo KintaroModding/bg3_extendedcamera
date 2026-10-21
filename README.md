@@ -12,21 +12,25 @@ does, how to install it and its compatibility are in [openmods.md](openmods.md),
 
 The game keeps its camera limits in four camera definitions, which the Script Extender exposes as
 `Ext.Utils.GetGlobalSwitches().CameraSwitches` (type `CameraGlobalSwitches`). `DefaultDistanceMax` is the zoom-out
-limit with mouse and keyboard. [Native Camera Tweaks](https://github.com/ersh1/BG3_NativeCameraTweaks) writes the
+limit with mouse and keyboard; `MaxDistFromChar` is how far the camera can move away from the character (Native Camera
+Tweaks calls it `maxCamDistanceFromRoot`). [Native Camera Tweaks](https://github.com/ersh1/BG3_NativeCameraTweaks) writes the
 same values in memory; its offsets (exploration `0x79C`, combat `0x930`, one more at `0xC58`, all `0x194` apart, the
 size of `CameraGlobalSwitches`) put the exploration camera at index 1 and the combat camera at index 2, and its
 comments give the game's limits: 12 when exploring, 15 in combat.
 
-`Client/Camera.lua` sets `DefaultDistanceMax` of both from the settings, on the client:
+`Client/Camera.lua` sets these fields of both entries from the settings (`Camera.Targets`), on the client:
 
 - at every session load, after it wrote all four definitions to client.log (`Camera switches: [1] max 12, ...`);
 - at once after an MCM change (`Settings.OnChange`);
 - every two seconds it compares the values with the settings and sets them again when the game or a setting changed
-  them. The log tells once per mode when the game wrote its own value.
+  them. The log tells once per value when the game wrote its own value.
 
 The values belong to the game process, not to the Lua state, so they stay when a save loads; the mod always sets the
 values from the settings and never changes them relative to what it finds. Slider values are rounded and clamped to
-10-40, because MCM saves values between the steps while the player drags a slider. When the Script Extender gives no
+the slider range (`Camera.Ranges`), because MCM saves values between the steps while the player drags a slider.
+
+client.log also gets the camera entities (component `GameCameraBehavior`: `MovementDistanceMax`, `AtLeashLimit`) once
+they exist, and one line when a camera reaches its move limit, with all camera definitions. When the Script Extender gives no
 camera switches, the mod writes one error line to client.log and leaves the camera alone.
 
 ## Settings
@@ -70,7 +74,7 @@ src/                                     Mod files (packed into the .pak)
     Lua/Shared/Settings.lua              MCM settings with defaults (Settings.Defaults)
     Lua/Server/ServerLog.lua             server.log
     Lua/Client/ClientLog.lua             client.log
-    Lua/Client/Camera.lua                Sets the zoom-out limits from the settings
+    Lua/Client/Camera.lua                Sets the zoom-out limits and the move range from the settings
 docs/                                    Cover and screenshots for openmods.md
 tests/                                   Offline tests (Lua 5.4 through lupa)
 scripts/bump_version.py                  Raises the last version digit in meta.lsx
@@ -90,9 +94,9 @@ python scripts\bump_version.py --show
 Logs: the mod writes `server.log` and `client.log` to
 `%LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\Script Extender\bg3_extendedcamera\`. Each load writes a line like
 `Extended Camera 1.0.0.1 loaded.`, so the logs show which version runs, and server.log gets a line with every setting,
-for example `Settings: combat_max_distance = 20 (MCM), exploration_max_distance = 20 (MCM).`, also after each change.
-client.log gets the camera values and every change, for example
-`Session loaded: zoom-out limit exploration 12 -> 20, combat 15 -> 20.` The files keep the lines of earlier
+for example `Settings: combat_max_distance = 20 (MCM), exploration_max_distance = 20 (MCM), move_max_distance = 60 (MCM).`,
+also after each change. client.log gets the camera values and every change, for example
+`Session loaded: exploration zoom 12 -> 20, combat zoom 15 -> 20, ...` The files keep the lines of earlier
 loads and game starts (the newest 500 in server.log, 200 in client.log). MCM stores the settings in
 `Script Extender\BG3MCM\Profiles\<Profile>\bg3_extendedcamera\settings.json`. `python scripts\show_log.py` prints the
 newest log lines and these settings (from `BG3_DATA_DIR`, if set).

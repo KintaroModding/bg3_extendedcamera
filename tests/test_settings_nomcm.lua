@@ -19,7 +19,8 @@ Test("the session load logs the defaults", function()
     Ext.Events.SessionLoaded:Fire()
     Harness.RunTimers()
     AssertTrue(string.find(Harness.Files["bg3_extendedcamera/server.log"] or "",
-        "Settings: combat_max_distance = 20 (default), exploration_max_distance = 20 (default).",
+        "Settings: combat_max_distance = 20 (default), exploration_max_distance = 20 (default), "
+        .. "move_max_distance = 60 (default).",
         1, true), "server.log line")
 end)
 

@@ -12,6 +12,7 @@ Settings.MCMModuleUUID = "755a8a72-407f-4f0d-9a33-274ac0f0b53d"
 Settings.Defaults = {
     exploration_max_distance = 20,
     combat_max_distance = 20,
+    move_max_distance = 60,
 }
 
 --- Returns the value of a setting and where it came from: "MCM", or "default" when MCM is missing, fails, or has no

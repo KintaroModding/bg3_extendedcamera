@@ -3,7 +3,7 @@
 
 Harness.Mods[ModuleUUID] = { Info = { ModVersion = { 1, 0, 0, 0 } } }
 -- MCM loads before this mod (the dependency in meta.lsx), so this mod gets the MCM table.
-Harness.InstallMCM({ exploration_max_distance = 24, combat_max_distance = 28 })
+Harness.InstallMCM({ exploration_max_distance = 24, combat_max_distance = 28, move_max_distance = 90 })
 
 Ext.Require("BootstrapServer.lua")
 Ext.Require("BootstrapClient.lua")
@@ -21,7 +21,8 @@ end
 
 Test("the session load logs the values from MCM", function()
     Ext.Events.SessionLoaded:Fire()
-    AssertTrue(string.find(ServerLog(), "Settings: combat_max_distance = 28 (MCM), exploration_max_distance = 24 (MCM).", 1, true), "server.log line")
+    AssertTrue(string.find(ServerLog(), "Settings: combat_max_distance = 28 (MCM), exploration_max_distance = 24 (MCM), "
+        .. "move_max_distance = 90 (MCM).", 1, true), "server.log line")
 end)
 
 Test("a saved setting of this mod reaches OnChange with its id", function()
@@ -30,7 +31,8 @@ Test("a saved setting of this mod reaches OnChange with its id", function()
     AssertEq(changes[#changes], "exploration_max_distance", "setting id")
     AssertEq(Settings.Get("exploration_max_distance"), 30, "new value")
     AssertTrue(string.find(ServerLog(),
-        "Setting changed (exploration_max_distance): combat_max_distance = 28 (MCM), exploration_max_distance = 30 (MCM).", 1, true),
+        "Setting changed (exploration_max_distance): combat_max_distance = 28 (MCM), exploration_max_distance = 30 (MCM), "
+        .. "move_max_distance = 90 (MCM).", 1, true),
         "server.log line")
 end)
 
@@ -46,7 +48,8 @@ Test("a profile switch reaches OnChange without an id", function()
     Ext.ModEvents.BG3MCM["MCM_Profile_Activated"]:Fire({ profileName = "Other" })
     AssertEq(changes[#changes], "profile", "call without id")
     AssertTrue(string.find(ServerLog(),
-        "MCM profile changed: combat_max_distance = 28 (MCM), exploration_max_distance = 22 (MCM).", 1, true),
+        "MCM profile changed: combat_max_distance = 28 (MCM), exploration_max_distance = 22 (MCM), "
+        .. "move_max_distance = 90 (MCM).", 1, true),
         "server.log line")
 end)
 
