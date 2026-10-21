@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openmods.nexus/openmods.schema.json",
+  "openmods": 1,
+  "name": "Extended Camera",
+  "summary": "Lets the camera zoom out further than the game allows, when exploring and in combat.",
+  "games": ["baldurs-gate-3"],
+  "tags": ["camera", "quality-of-life"],
+  "requires": ["Norbyte's Script Extender", "Mod Configuration Menu"],
+  "gameVersions": ["Patch 8"]
+}

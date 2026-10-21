@@ -1,0 +1,40 @@
+{
+  "SchemaVersion": 1,
+  "ModName": "Extended Camera",
+  "Tabs": [
+    {
+      "TabId": "general",
+      "TabName": "General",
+      "Sections": [
+        {
+          "SectionId": "zoom",
+          "SectionName": "Zoom-out limit",
+          "Settings": [
+            {
+              "Id": "exploration_max_distance",
+              "Name": "Max zoom-out when exploring",
+              "Type": "slider_int",
+              "Default": 20,
+              "Options": {
+                "Min": 10,
+                "Max": 40
+              },
+              "Description": "How far the camera can zoom out outside combat. The game's own limit is 12. Higher values show more of the area; indoors, the camera can then go above the ceiling. A change applies at once."
+            },
+            {
+              "Id": "combat_max_distance",
+              "Name": "Max zoom-out in combat",
+              "Type": "slider_int",
+              "Default": 20,
+              "Options": {
+                "Min": 10,
+                "Max": 40
+              },
+              "Description": "How far the camera can zoom out during combat. The game's own limit is 15. The tactical view (overhead camera) keeps its own limit. A change applies at once."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
